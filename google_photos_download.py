@@ -167,6 +167,8 @@ next = results['nextPageToken']
 # Keep trying to process next batch until there's no more
 while True:
     results = service.mediaItems().list(pageSize=100, pageToken=next).execute()  # Get items from Google Photos
+    if len(results) == 1:
+        break
     media_num, download_num, skip_num, error_num, new_download = download_images(results['mediaItems'])  # Down files
     total_media += media_num
     total_download += download_num
