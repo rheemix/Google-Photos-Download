@@ -131,6 +131,12 @@ def download_images(media_items):
     return media_num, download_num, skip_num, error_num, new_download
 
 
+# Initializations
+total_media = 0
+total_download = 0
+total_skip = 0
+total_error = 0
+
 # Get API Service
 # print('Getting API Service...')
 service = get_service()
@@ -151,12 +157,31 @@ f = open("download_list.txt", "a+")  # Open file again to record file names as n
 
 results = service.mediaItems().list(pageSize=100).execute()  # Get items from Google Photos
 media_num, download_num, skip_num, error_num, new_download = download_images(results['mediaItems'])  # Down files
+total_media += media_num
+total_download += download_num
+total_skip += skip_num
+total_error += error_num
+next = results['nextPageToken']
+
+# Google Photos API only allows up to 100 images to be processed at once
+# Keep trying to process next batch until there's no more
+while True:
+    results = service.mediaItems().list(pageSize=100, pageToken=next).execute()  # Get items from Google Photos
+    media_num, download_num, skip_num, error_num, new_download = download_images(results['mediaItems'])  # Down files
+    total_media += media_num
+    total_download += download_num
+    total_skip += skip_num
+    total_error += error_num
+    try:
+        next = results['nextPageToken']
+    except KeyError:
+        break
 
 print('\n************************')
-print(' Total Files      = ' + str(media_num))
-print(' Downloaded Files = ' + str(download_num))
-print(' Skipped Files    = ' + str(skip_num))
-print(' Error Files      = ' + str(error_num))
+print(' Total Files      = ' + str(total_media))
+print(' Downloaded Files = ' + str(total_download))
+print(' Skipped Files    = ' + str(total_skip))
+print(' Error Files      = ' + str(total_error))
 print('************************')
 
 input("\nPress Enter to continue...")
